@@ -12,7 +12,7 @@ def save_features(train_loader, test_loader, model, feature_path, debug):
     if torch.cuda.device_count() == 1:
         model.cuda()
     else:
-        print('>1 GPUs detected, keeping model device unchanged since HF might have automatically sharded the model')
+        print('Multiple GPUs detected, not moving model to GPU explicitly')
     model.eval()
     features = []
     with torch.no_grad():
@@ -47,9 +47,10 @@ def save_features(train_loader, test_loader, model, feature_path, debug):
             else:
                 inputs = inputs.cuda()
             feat = model(inputs).detach().cpu()
-            test_features.append(feat)
+            # test_features.append(feat)
             if debug: 
                 break
+        exit()
         test_features = torch.cat(test_features, dim=0)
         
     print(f'Features: {features.size()}', f'Test features: {test_features.size()}')
