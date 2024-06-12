@@ -1,25 +1,28 @@
 # Transferring Knowledge from Large Foundation Models to Small Downstream Models
-This repository contains the code for the paper [Transferring Knowledge from Large Foundation Models to Small Downstream Models]() by Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang, and Andrew Gordon Wilson.
+This repository contains the code for the paper [Transferring Knowledge from Large Foundation Models to Small Downstream Models](https://arxiv.org/abs/2406.07337) by Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang, and Andrew Gordon Wilson.
 
 <figure>
   <img src="./assets/top_fig.png" alt="Image">
 </figure>
 
-Adaptive Feature Transfer (AFT) transfers knowledge from large foundation models into small downstream models, improving downstream performance with minimal cost. (a) AFT regularizes the downstream model to prioritize learning the task-relevant subset of pre-trained features ($\mathrm{blue} \cap \mathrm{red}$) over entirely new features ($\mathrm{red} \setminus \mathrm{blue}$). Blue region represents information in pre-trained features, red represents information in downstream features, and inside the square boundary represents all information in the raw, uncompressed input. (b) Over 6 vision datasets and 8 NLP datasets, AFT significantly outperforms standard transfer learning, knowledge distillation, and B-Tuning. Error is normalized by that achieved with standard transfer learning and averaged over datasets and downstream models, including ViT-S, MLP Mixer-B, ResNet-50, BERT-S, and DistillBERT. (c) AFT is the most effective at translating improvements in pre-trained models to improvements in downstream performance.
+Adaptive Feature Transfer (AFT) transfers knowledge from large foundation models into small downstream models, improving downstream performance with minimal cost. (a) AFT regularizes the downstream model to prioritize learning the task-relevant subset of pre-trained features ($\mathrm{blue} \cap \mathrm{red}$) over entirely new features ($\mathrm{red} \setminus \mathrm{blue}$). Blue region represents information in pre-trained features, red represents information in downstream features, and inside the square boundary represents all information in the raw, uncompressed input. (b) Over 6 vision datasets and 8 NLP datasets, AFT significantly outperforms standard transfer learning (STL), knowledge distillation (KD) and its variants relational knowledge distillation (RKD) and factor transfer (FT), and B-Tuning. Error is normalized by that achieved with standard transfer learning and averaged over datasets and downstream models, including ViT-S, MLP Mixer-B, ResNet-50, BERT-S, and DistillBERT. (c) AFT is the most effective at translating improvements in pre-trained models to improvements in downstream performance.
 
 Please cite this work as:
 ```bibtex
-@article{qiu2024transfer,
-    title={{Transferring Knowledge from Large Foundation Models to Small Downstream Models}},
-    author={Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang and Andrew Gordon Wilson},
-    year={2024}
+@misc{qiu2024transferring,
+      title={Transferring Knowledge from Large Foundation Models to Small Downstream Models}, 
+      author={Shikai Qiu and Boran Han and Danielle C. Maddix and Shuai Zhang and Yuyang Wang and Andrew Gordon Wilson},
+      year={2024},
+      eprint={2406.07337},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 ```
 
 ## Setup
 To setup the environment, simply run
 ```
-sh setup.sh
+source setup.sh
 ```
 to install the required packages inside a conda environment named `aft`.
 
@@ -71,12 +74,13 @@ python save_features.py \
 --dataset=${dataset} \
 --save_path=${save_path}
 ```
-More examples can be found in `examples/run.sh` and `examples/save_features.sh`. 
 
 When tuning hyperparameters, pass `use_val=True` so the model is evaluated on the validation constructed from holding out 10% of the training set.
 
 ## Baselines
-To run knowledge distillation instead, simply set `method=kd` and adjust `prec` to set the corresponding regularization strength $\beta$. Similarly, to run [B-Tuning](https://arxiv.org/abs/2110.10545), set `method=btune`. Before running B-Tuning, we need to compute [LogME](https://github.com/thuml/LogME/tree/main) scores. For example, if we train on CIFAR-10 with ViT-S as downstream model and ViT-G DINOv2 as the pre-trained model, run the following command after you have computed the features for both ViT-S and ViT-G DINOv2 on CIFAR-10:
+To run standard transfer learning, set `method=init`.
+
+To run knowledge distillation or [relational knowledge distillation](https://arxiv.org/abs/1904.05068), simply set `method=kd` or `method=rkd` and adjust `prec` to set the corresponding regularization strength $\beta$. Similarly, to run [B-Tuning](https://arxiv.org/abs/2110.10545), set `method=btune`. Before running B-Tuning, we need to compute [LogME](https://github.com/thuml/LogME/tree/main) scores. For example, if we train on CIFAR-10 with ViT-S as downstream model and ViT-G DINOv2 as the pre-trained model, run the following command after you have computed the features for both ViT-S and ViT-G DINOv2 on CIFAR-10:
 ```
 dataset=cifar10
 for model in vit_small_patch16_224.augreg_in1k vit_base_patch14_dinov2.lvd142m; do
@@ -86,7 +90,11 @@ for model in vit_small_patch16_224.augreg_in1k vit_base_patch14_dinov2.lvd142m; 
 done;
 ```
 
-To run standard transfer learning, set `method=init`.
+To run [factor transfer](https://arxiv.org/abs/1802.04977), first train an autoencoder to compress pre-trained features, e.g.,
+```
+python train_ae.py --model_class=vit_giant_patch14_dinov2.lvd142m --dataset=cifar100
+```
+then train with ``method=ft``.
 
 ## Models
 Here's a table that map model names as used in the paper and the corresponding names that should be used in the code base.
@@ -122,11 +130,3 @@ Here's a table that map model names as used in the paper and the corresponding n
 | LLaMA 7B                         | meta-llama/Llama-2-7b-hf         |
 | LLaMA Chat 7B                    | meta-llama/Llama-2-7b-chat-hf    |
 | CLIP ResNet50 for SNLI-VE        | CLIP                             |
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This project is licensed under the Apache-2.0 License.

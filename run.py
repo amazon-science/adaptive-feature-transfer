@@ -19,7 +19,7 @@ def main(model_class, dataset, train_frac, use_val, method, steps, eval_steps=10
         steps *= 4
     args = locals()
     u.pretty_print_dict(args)
-    assert method in ['base', 'init', 'lconcat', 'fconcat', 'concat', 'aft', 'kd', 'aft_rbf', 'aft_no_kernel', 'aft_rbf', 'btune'], f'Unknown method {method}'
+    assert method in ['base', 'init', 'lconcat', 'fconcat', 'concat', 'aft', 'kd', 'ft', 'rkd', 'kkd', 'aft_rbf', 'aft_no_kernel', 'aft_dense', 'btune'], f'Unknown method {method}'
     out_dim = get_out_dim(dataset)
     # randomly init model
     model, get_transform, tokenizer, input_collate_fn = models.create_model(model_class, out_dim=out_dim, pretrained=False, **kwargs) # call get_transform with train=True/False to get train/test transforms
@@ -39,7 +39,10 @@ def main(model_class, dataset, train_frac, use_val, method, steps, eval_steps=10
             pretrained_models = (pretrained_models,)
         pretrained_models = [model.strip() for model in pretrained_models]
         print(f'Pretrained models: {pretrained_models}')
-        feature_paths = [f'./features/{model}_{dataset}.pt' for model in pretrained_models]
+        if method == 'ft':
+            feature_paths = [f'./features/{model}_{dataset}_ae.pt' for model in pretrained_models]
+        else:
+            feature_paths = [f'./features/{model}_{dataset}.pt' for model in pretrained_models]
         for path in feature_paths:
             assert os.path.exists(path), f'Feature path {path} does not exist'
         # annotate dataset with features
@@ -62,7 +65,7 @@ def main(model_class, dataset, train_frac, use_val, method, steps, eval_steps=10
         loaders = [get_loader(ds, batch_size, num_workers=num_workers, shuffle=(ds is train_ds), input_collate_fn=input_collate_fn) for ds in [train_ds, test_ds]]
     
 
-    if method in ['init', 'aft', 'aft_no_kernel', 'aft_rbf', 'kd', 'btune'] and init_model is not None:
+    if method in ['init', 'aft', 'aft_no_kernel', 'aft_rbf', 'aft_dense', 'kd', 'ft', 'rkd', 'kkd', 'btune'] and init_model is not None:
         print(f'Init model: {init_model}')
         init_model = models.create_model(init_model, out_dim=out_dim, pretrained=True, **kwargs)[0]
     else:
@@ -73,7 +76,7 @@ def main(model_class, dataset, train_frac, use_val, method, steps, eval_steps=10
         test_ds = FeatureDataset(raw_test_ds, feature_paths, indices=None, split='test', feature_only=True) # (f, y)
         train_loader = torch.utils.data.DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0)
         test_loader = torch.utils.data.DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=0)
-        loaders = (train_loader, None, test_loader)
+        loaders = [train_loader, test_loader]
         if dataset == 'snli-ve':
             model = ProductLinearModel(train_ds.num_features, out_dim)    
         else:
@@ -86,14 +89,17 @@ def main(model_class, dataset, train_frac, use_val, method, steps, eval_steps=10
 
     if method == 'aft':
         prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='kernel')
+    elif method == 'aft_dense':
+        prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='kernel_dense')
+    elif method == 'kkd':
+        prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='kkd')
     elif method == 'aft_rbf':
         prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='kernel_rbf')
     elif method == 'aft_no_kernel':
         prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='feature')
-    elif method == 'kd':
-        print(f'Overriding prior_lr to be same as lr={lr}')
+    elif method in ['kd', 'rkd', 'ft']:
         prior_lr = lr
-        prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type='kd')
+        prior = get_prior(model.feat_dim, train_ds, prec, learn_scales, tensor_product=(dataset=='snli-ve'), prior_type=method)
     elif method == 'btune':
         prior = get_btune_prior(model_class, dataset, train_ds, prec, train_frac)
     else:

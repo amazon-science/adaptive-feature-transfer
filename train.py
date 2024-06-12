@@ -123,7 +123,6 @@ def train_model(model, loaders, optimizer='sgd', steps=1000, eval_steps=500, lr=
     if pretrained_init is not None:
         init_from_pretrained(model, pretrained_init, freeze_init)
     criterion = nn.CrossEntropyLoss
-
     train_loader, test_loader = loaders
 
     model_params = [p for p in model.parameters()]
