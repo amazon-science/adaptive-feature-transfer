@@ -1,5 +1,5 @@
 # Transferring Knowledge from Large Foundation Models to Small Downstream Models
-This repository contains the code for the paper [Transferring Knowledge from Large Foundation Models to Small Downstream Models]() by Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang, and Andrew Gordon Wilson.
+This repository contains the code for the paper [Transferring Knowledge from Large Foundation Models to Small Downstream Models](https://arxiv.org/abs/2406.07337) by Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang, and Andrew Gordon Wilson.
 
 <figure>
   <img src="./assets/top_fig.png" alt="Image">
@@ -9,10 +9,13 @@ Adaptive Feature Transfer (AFT) transfers knowledge from large foundation models
 
 Please cite this work as:
 ```bibtex
-@article{qiu2024transfer,
-    title={{Transferring Knowledge from Large Foundation Models to Small Downstream Models}},
-    author={Shikai Qiu, Boran Han, Danielle C. Maddix, Shuai Zhang, Yuyang Wang and Andrew Gordon Wilson},
-    year={2024}
+@misc{qiu2024transferring,
+      title={Transferring Knowledge from Large Foundation Models to Small Downstream Models}, 
+      author={Shikai Qiu and Boran Han and Danielle C. Maddix and Shuai Zhang and Yuyang Wang and Andrew Gordon Wilson},
+      year={2024},
+      eprint={2406.07337},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 ```
 
