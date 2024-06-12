@@ -131,7 +131,6 @@ Here's a table that map model names as used in the paper and the corresponding n
 | LLaMA Chat 7B                    | meta-llama/Llama-2-7b-chat-hf    |
 | CLIP ResNet50 for SNLI-VE        | CLIP                             |
 
-<<<<<<< HEAD
 =======
 
 ## Security
@@ -141,4 +140,3 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 ## License
 
 This project is licensed under the Apache-2.0 License.
->>>>>>> 0d574674d38449c592926393836accc2b37f8dbd
